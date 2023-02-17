@@ -48,7 +48,7 @@ class Base {
         return new Table<TFields>(this, null, tableName);
     }
 
-    makeRequest(options: BaseRequestOptions = {}): Promise<BaseResponse> {
+    async makeRequest(options: BaseRequestOptions = {}): Promise<BaseResponse> {
         const method = get(options, 'method', 'GET').toUpperCase();
 
         const url = `${this._airtable._endpointUrl}/v${this._airtable._apiVersionMajor}/${
@@ -56,7 +56,7 @@ class Base {
         }${get(options, 'path', '/')}?${objectToQueryParamString(get(options, 'qs', {}))}`;
 
         const controller = new AbortController();
-        const headers = this._getRequestHeaders(
+        const headers = await this._getRequestHeaders(
             Object.assign({}, this._airtable._customHeaders, options.headers ?? {})
         );
 
@@ -134,10 +134,9 @@ class Base {
         runAction(this, method, path, queryParams, bodyData, callback, 0);
     }
 
-    _getRequestHeaders(headers: {[key: string]: string}): {[key: string]: string} {
+    async _getRequestHeaders(headers: {[key: string]: string}): Promise<{[key: string]: string}> {
         const result = new HttpHeaders();
-
-        result.set('Authorization', `Bearer ${this._airtable._apiKey}`);
+        result.set('Authorization', `Bearer ${await this._airtable._getApiKey()}`);
         result.set('User-Agent', userAgent);
         result.set('Content-Type', 'application/json');
         for (const headerKey of keys(headers)) {

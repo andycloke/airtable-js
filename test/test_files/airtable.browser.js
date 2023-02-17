@@ -51,6 +51,42 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -76,64 +112,74 @@ var Base = /** @class */ (function () {
         return new table_1.default(this, null, tableName);
     };
     Base.prototype.makeRequest = function (options) {
-        var _this = this;
         var _a;
         if (options === void 0) { options = {}; }
-        var method = get_1.default(options, 'method', 'GET').toUpperCase();
-        var url = this._airtable._endpointUrl + "/v" + this._airtable._apiVersionMajor + "/" + this._id + get_1.default(options, 'path', '/') + "?" + object_to_query_param_string_1.default(get_1.default(options, 'qs', {}));
-        var controller = new abort_controller_1.default();
-        var headers = this._getRequestHeaders(Object.assign({}, this._airtable._customHeaders, (_a = options.headers) !== null && _a !== void 0 ? _a : {}));
-        var requestOptions = {
-            method: method,
-            headers: headers,
-            signal: controller.signal,
-        };
-        if ('body' in options && _canRequestMethodIncludeBody(method)) {
-            requestOptions.body = JSON.stringify(options.body);
-        }
-        var timeout = setTimeout(function () {
-            controller.abort();
-        }, this._airtable._requestTimeout);
-        return new Promise(function (resolve, reject) {
-            fetch_1.default(url, requestOptions)
-                .then(function (resp) {
-                clearTimeout(timeout);
-                if (resp.status === 429 && !_this._airtable._noRetryIfRateLimited) {
-                    var numAttempts_1 = get_1.default(options, '_numAttempts', 0);
-                    var backoffDelayMs = exponential_backoff_with_jitter_1.default(numAttempts_1);
-                    setTimeout(function () {
-                        var newOptions = __assign(__assign({}, options), { _numAttempts: numAttempts_1 + 1 });
-                        _this.makeRequest(newOptions)
-                            .then(resolve)
-                            .catch(reject);
-                    }, backoffDelayMs);
-                }
-                else {
-                    resp.json()
-                        .then(function (body) {
-                        var err = _this._checkStatusForError(resp.status, body) ||
-                            _getErrorForNonObjectBody(resp.status, body);
-                        if (err) {
-                            reject(err);
+        return __awaiter(this, void 0, void 0, function () {
+            var method, url, controller, headers, requestOptions, timeout;
+            var _this = this;
+            return __generator(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        method = get_1.default(options, 'method', 'GET').toUpperCase();
+                        url = this._airtable._endpointUrl + "/v" + this._airtable._apiVersionMajor + "/" + this._id + get_1.default(options, 'path', '/') + "?" + object_to_query_param_string_1.default(get_1.default(options, 'qs', {}));
+                        controller = new abort_controller_1.default();
+                        return [4 /*yield*/, this._getRequestHeaders(Object.assign({}, this._airtable._customHeaders, (_a = options.headers) !== null && _a !== void 0 ? _a : {}))];
+                    case 1:
+                        headers = _b.sent();
+                        requestOptions = {
+                            method: method,
+                            headers: headers,
+                            signal: controller.signal,
+                        };
+                        if ('body' in options && _canRequestMethodIncludeBody(method)) {
+                            requestOptions.body = JSON.stringify(options.body);
                         }
-                        else {
-                            resolve({
-                                statusCode: resp.status,
-                                headers: resp.headers,
-                                body: body,
-                            });
-                        }
-                    })
-                        .catch(function () {
-                        var err = _getErrorForNonObjectBody(resp.status);
-                        reject(err);
-                    });
+                        timeout = setTimeout(function () {
+                            controller.abort();
+                        }, this._airtable._requestTimeout);
+                        return [2 /*return*/, new Promise(function (resolve, reject) {
+                                fetch_1.default(url, requestOptions)
+                                    .then(function (resp) {
+                                    clearTimeout(timeout);
+                                    if (resp.status === 429 && !_this._airtable._noRetryIfRateLimited) {
+                                        var numAttempts_1 = get_1.default(options, '_numAttempts', 0);
+                                        var backoffDelayMs = exponential_backoff_with_jitter_1.default(numAttempts_1);
+                                        setTimeout(function () {
+                                            var newOptions = __assign(__assign({}, options), { _numAttempts: numAttempts_1 + 1 });
+                                            _this.makeRequest(newOptions)
+                                                .then(resolve)
+                                                .catch(reject);
+                                        }, backoffDelayMs);
+                                    }
+                                    else {
+                                        resp.json()
+                                            .then(function (body) {
+                                            var err = _this._checkStatusForError(resp.status, body) ||
+                                                _getErrorForNonObjectBody(resp.status, body);
+                                            if (err) {
+                                                reject(err);
+                                            }
+                                            else {
+                                                resolve({
+                                                    statusCode: resp.status,
+                                                    headers: resp.headers,
+                                                    body: body,
+                                                });
+                                            }
+                                        })
+                                            .catch(function () {
+                                            var err = _getErrorForNonObjectBody(resp.status);
+                                            reject(err);
+                                        });
+                                    }
+                                })
+                                    .catch(function (err) {
+                                    clearTimeout(timeout);
+                                    err = new airtable_error_1.default('CONNECTION_ERROR', err.message, null);
+                                    reject(err);
+                                });
+                            })];
                 }
-            })
-                .catch(function (err) {
-                clearTimeout(timeout);
-                err = new airtable_error_1.default('CONNECTION_ERROR', err.message, null);
-                reject(err);
             });
         });
     };
@@ -144,15 +190,28 @@ var Base = /** @class */ (function () {
         run_action_1.default(this, method, path, queryParams, bodyData, callback, 0);
     };
     Base.prototype._getRequestHeaders = function (headers) {
-        var result = new http_headers_1.default();
-        result.set('Authorization', "Bearer " + this._airtable._apiKey);
-        result.set('User-Agent', userAgent);
-        result.set('Content-Type', 'application/json');
-        for (var _i = 0, _a = keys_1.default(headers); _i < _a.length; _i++) {
-            var headerKey = _a[_i];
-            result.set(headerKey, headers[headerKey]);
-        }
-        return result.toJSON();
+        return __awaiter(this, void 0, void 0, function () {
+            var result, _a, _b, _c, _d, _i, _e, headerKey;
+            return __generator(this, function (_f) {
+                switch (_f.label) {
+                    case 0:
+                        result = new http_headers_1.default();
+                        _b = (_a = result).set;
+                        _c = ['Authorization'];
+                        _d = "Bearer ";
+                        return [4 /*yield*/, this._airtable._getApiKey()];
+                    case 1:
+                        _b.apply(_a, _c.concat([_d + (_f.sent())]));
+                        result.set('User-Agent', userAgent);
+                        result.set('Content-Type', 'application/json');
+                        for (_i = 0, _e = keys_1.default(headers); _i < _e.length; _i++) {
+                            headerKey = _e[_i];
+                            result.set(headerKey, headers[headerKey]);
+                        }
+                        return [2 /*return*/, result.toJSON()];
+                }
+            });
+        });
     };
     Base.prototype._checkStatusForError = function (statusCode, body) {
         var _a = (body !== null && body !== void 0 ? body : { error: {} }).error, error = _a === void 0 ? {} : _a;
@@ -3683,12 +3742,16 @@ var table_1 = __importDefault(require("./table"));
 var airtable_error_1 = __importDefault(require("./airtable_error"));
 var Airtable = /** @class */ (function () {
     function Airtable(opts) {
+        var _this = this;
         if (opts === void 0) { opts = {}; }
         var defaultConfig = Airtable.default_config();
         var apiVersion = opts.apiVersion || Airtable.apiVersion || defaultConfig.apiVersion;
         Object.defineProperties(this, {
             _apiKey: {
                 value: opts.apiKey || Airtable.apiKey || defaultConfig.apiKey,
+            },
+            _getApiKey: {
+                value: opts.getApiKey || (function () { return Promise.resolve(_this._apiKey); }),
             },
             _apiVersion: {
                 value: apiVersion,

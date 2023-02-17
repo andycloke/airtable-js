@@ -17,6 +17,7 @@ type CustomHeaders = ObjectMap<string, string | number | boolean>;
 
 class Airtable {
     readonly _apiKey: string;
+    readonly _getApiKey: () => Promise<string>;
     readonly _apiVersion: string;
     readonly _apiVersionMajor: string;
     readonly _customHeaders: CustomHeaders;
@@ -43,6 +44,9 @@ class Airtable {
         Object.defineProperties(this, {
             _apiKey: {
                 value: opts.apiKey || Airtable.apiKey || defaultConfig.apiKey,
+            },
+            _getApiKey: {
+                value: opts.getApiKey || (() => Promise.resolve(this._apiKey)),
             },
             _apiVersion: {
                 value: apiVersion,
@@ -114,12 +118,15 @@ namespace Airtable {
     /* eslint-enable no-redeclare, @typescript-eslint/no-namespace */
     export interface AirtableOptions {
         apiKey?: string;
+        getApiKey?: GetApiKey;
         apiVersion?: string;
         customHeaders?: CustomHeaders;
         endpointUrl?: string;
         noRetryIfRateLimited?: boolean;
         requestTimeout?: number;
     }
+
+    export type GetApiKey = () => Promise<string>;
 
     export type FieldSet = AirtableFieldSet;
     export type Collaborator = AirtableCollaborator;
