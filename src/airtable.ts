@@ -72,7 +72,7 @@ class Airtable {
             },
         });
 
-        if (!this._apiKey) {
+        if (!this._apiKey && !this._getApiKey) {
             throw new Error('An API key is required to connect to Airtable');
         }
     }
