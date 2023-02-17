@@ -1,3 +1,8 @@
+Fork of Airtable.js that allows us to use a function to get the latest API key - this is necessary after switch to OAuth since we
+need to grab the latest token.
+
+[Was forked with this method](https://stackoverflow.com/a/30352360/7216122).
+
 The official Airtable JavaScript library.
 
 # Airtable.js
@@ -18,12 +23,12 @@ To install airtable.js in a node project:
 
     npm install airtable
 
-
 ### Browser
 
 To use airtable.js in the browser, use [airtable.browser.js](https://github.com/Airtable/airtable.js/blob/master/build/airtable.browser.js) which is in the `build` folder.
 
 For a demo, run
+
 ```
 cd test/test_files
 python -m SimpleHTTPServer
@@ -33,20 +38,18 @@ Edit `test/test_files/index.html` - put your `BASE_ID` and `API_KEY` (Be careful
 
 Then open http://localhost:8000/ in your browser.
 
-
 # Configuration
 
 There are three configurable options available:
 
-  * apiKey - set the token to your secret API token. Visit [your account page](https://airtable.com/account) to create an API token.  (`AIRTABLE_API_KEY`)
-  * endpointUrl - the API endpoint to hit. You might want to override
-    it if you are using an API proxy (e.g. runscope.net) to debug your API calls. (`AIRTABLE_ENDPOINT_URL`)
-  * requestTimeout - the timeout in milliseconds for requests. The default is 5 minutes (`300000`)
+- apiKey - set the token to your secret API token. Visit [your account page](https://airtable.com/account) to create an API token. (`AIRTABLE_API_KEY`)
+- endpointUrl - the API endpoint to hit. You might want to override
+  it if you are using an API proxy (e.g. runscope.net) to debug your API calls. (`AIRTABLE_ENDPOINT_URL`)
+- requestTimeout - the timeout in milliseconds for requests. The default is 5 minutes (`300000`)
 
 You can set the options globally via Airtable.configure:
 
     Airtable.configure({ apiKey: 'YOUR_SECRET_API_KEY' })
-
 
 Globally via process env (e.g. in 12factor setup).
 
