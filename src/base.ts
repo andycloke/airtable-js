@@ -1,7 +1,7 @@
 import get from 'lodash/get';
 import isPlainObject from 'lodash/isPlainObject';
 import keys from 'lodash/keys';
-import fetch from './fetch';
+import _fetch from './fetch';
 import AbortController from './abort-controller';
 import objectToQueryParamString from './object_to_query_param_string';
 import AirtableError from './airtable_error';
@@ -38,10 +38,12 @@ interface BaseResponse {
 class Base {
     readonly _airtable: Airtable;
     readonly _id: string;
+    readonly _fetch: typeof _fetch;
 
-    constructor(airtable: Airtable, baseId: string) {
+    constructor(airtable: Airtable, baseId: string, fetch: typeof _fetch = _fetch) {
         this._airtable = airtable;
         this._id = baseId;
+        this._fetch = fetch;
     }
 
     table<TFields extends FieldSet>(tableName: string): Table<TFields> {
@@ -75,7 +77,7 @@ class Base {
         }, this._airtable._requestTimeout);
 
         return new Promise((resolve, reject) => {
-            fetch(url, requestOptions)
+            this._fetch(url, requestOptions)
                 .then((resp: Response) => {
                     clearTimeout(timeout);
                     if (resp.status === 429 && !this._airtable._noRetryIfRateLimited) {
@@ -131,7 +133,7 @@ class Base {
         bodyData: runAction.Body,
         callback: runAction.Callback
     ): void {
-        runAction(this, method, path, queryParams, bodyData, callback, 0);
+        runAction(this, method, path, queryParams, bodyData, callback, 0, this._fetch);
     }
 
     async _getRequestHeaders(headers: {[key: string]: string}): Promise<{[key: string]: string}> {
@@ -214,8 +216,8 @@ class Base {
         return this._id;
     }
 
-    static createFunctor(airtable: Airtable, baseId: string): AirtableBase {
-        const base = new Base(airtable, baseId);
+    static createFunctor(airtable: Airtable, baseId: string, fetch: typeof _fetch): AirtableBase {
+        const base = new Base(airtable, baseId, fetch);
         const baseFn = <TFields extends FieldSet>(tableName) => {
             return base.doCall<TFields>(tableName);
         };
