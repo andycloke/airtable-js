@@ -1,7 +1,7 @@
 import exponentialBackoffWithJitter from './exponential_backoff_with_jitter';
 import objectToQueryParamString from './object_to_query_param_string';
 import packageVersion from './package_version';
-import fetch from './fetch';
+import _fetch from './fetch';
 import AbortController from './abort-controller';
 import Base from './base';
 
@@ -23,7 +23,8 @@ function runAction(
     queryParams: ActionParams,
     bodyData: ActionBody,
     callback: ActionCallback,
-    numAttempts: number
+    numAttempts: number,
+    fetch: typeof _fetch = _fetch
 ): void {
     const url = `${base._airtable._endpointUrl}/v${base._airtable._apiVersionMajor}/${
         base._id
@@ -82,7 +83,8 @@ function runAction(
                                 queryParams,
                                 bodyData,
                                 callback,
-                                numAttempts + 1
+                                numAttempts + 1,
+                                fetch
                             );
                         }, backoffDelayMs);
                     } else {

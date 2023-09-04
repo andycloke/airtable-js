@@ -104,9 +104,11 @@ var package_version_1 = __importDefault(require("./package_version"));
 var exponential_backoff_with_jitter_1 = __importDefault(require("./exponential_backoff_with_jitter"));
 var userAgent = "Airtable.js/" + package_version_1.default;
 var Base = /** @class */ (function () {
-    function Base(airtable, baseId) {
+    function Base(airtable, baseId, fetch) {
+        if (fetch === void 0) { fetch = fetch_1.default; }
         this._airtable = airtable;
         this._id = baseId;
+        this._fetch = fetch;
     }
     Base.prototype.table = function (tableName) {
         return new table_1.default(this, null, tableName);
@@ -138,7 +140,7 @@ var Base = /** @class */ (function () {
                             controller.abort();
                         }, this._airtable._requestTimeout);
                         return [2 /*return*/, new Promise(function (resolve, reject) {
-                                fetch_1.default(url, requestOptions)
+                                _this._fetch(url, requestOptions)
                                     .then(function (resp) {
                                     clearTimeout(timeout);
                                     if (resp.status === 429 && !_this._airtable._noRetryIfRateLimited) {
@@ -187,7 +189,7 @@ var Base = /** @class */ (function () {
      * @deprecated This method is deprecated.
      */
     Base.prototype.runAction = function (method, path, queryParams, bodyData, callback) {
-        run_action_1.default(this, method, path, queryParams, bodyData, callback, 0);
+        run_action_1.default(this, method, path, queryParams, bodyData, callback, 0, this._fetch);
     };
     Base.prototype._getRequestHeaders = function (headers) {
         return __awaiter(this, void 0, void 0, function () {
@@ -253,8 +255,8 @@ var Base = /** @class */ (function () {
     Base.prototype.getId = function () {
         return this._id;
     };
-    Base.createFunctor = function (airtable, baseId) {
-        var base = new Base(airtable, baseId);
+    Base.createFunctor = function (airtable, baseId, fetch) {
+        var base = new Base(airtable, baseId, fetch);
         var baseFn = function (tableName) {
             return base.doCall(tableName);
         };
@@ -850,7 +852,8 @@ var package_version_1 = __importDefault(require("./package_version"));
 var fetch_1 = __importDefault(require("./fetch"));
 var abort_controller_1 = __importDefault(require("./abort-controller"));
 var userAgent = "Airtable.js/" + package_version_1.default;
-function runAction(base, method, path, queryParams, bodyData, callback, numAttempts) {
+function runAction(base, method, path, queryParams, bodyData, callback, numAttempts, fetch) {
+    if (fetch === void 0) { fetch = fetch_1.default; }
     var url = base._airtable._endpointUrl + "/v" + base._airtable._apiVersionMajor + "/" + base._id + path + "?" + object_to_query_param_string_1.default(queryParams);
     base._airtable
         ._getApiKey()
@@ -888,13 +891,13 @@ function runAction(base, method, path, queryParams, bodyData, callback, numAttem
         var timeout = setTimeout(function () {
             controller.abort();
         }, base._airtable._requestTimeout);
-        fetch_1.default(url, options)
+        fetch(url, options)
             .then(function (resp) {
             clearTimeout(timeout);
             if (resp.status === 429 && !base._airtable._noRetryIfRateLimited) {
                 var backoffDelayMs = exponential_backoff_with_jitter_1.default(numAttempts);
                 setTimeout(function () {
-                    runAction(base, method, path, queryParams, bodyData, callback, numAttempts + 1);
+                    runAction(base, method, path, queryParams, bodyData, callback, numAttempts + 1, fetch);
                 }, backoffDelayMs);
             }
             else {
@@ -3747,6 +3750,7 @@ var base_1 = __importDefault(require("./base"));
 var record_1 = __importDefault(require("./record"));
 var table_1 = __importDefault(require("./table"));
 var airtable_error_1 = __importDefault(require("./airtable_error"));
+var fetch_1 = __importDefault(require("./fetch"));
 var Airtable = /** @class */ (function () {
     function Airtable(opts) {
         var _this = this;
@@ -3780,13 +3784,16 @@ var Airtable = /** @class */ (function () {
             _requestTimeout: {
                 value: opts.requestTimeout || Airtable.requestTimeout || defaultConfig.requestTimeout,
             },
+            _fetch: {
+                value: opts.fetch || fetch_1.default,
+            },
         });
-        if (!this._apiKey) {
+        if (!this._apiKey && !this._getApiKey) {
             throw new Error('An API key is required to connect to Airtable');
         }
     }
     Airtable.prototype.base = function (baseId) {
-        return base_1.default.createFunctor(this, baseId);
+        return base_1.default.createFunctor(this, baseId, this._fetch);
     };
     Airtable.default_config = function () {
         return {
@@ -3816,4 +3823,4 @@ var Airtable = /** @class */ (function () {
 }());
 module.exports = Airtable;
 
-},{"./airtable_error":2,"./base":3,"./record":15,"./table":17}]},{},["airtable"]);
+},{"./airtable_error":2,"./base":3,"./fetch":7,"./record":15,"./table":17}]},{},["airtable"]);

@@ -12,6 +12,7 @@ import {Attachment as AirtableAttachment} from './attachment';
 import {Records as AirtableRecords} from './records';
 import {RecordData as AirtableRecordData} from './record_data';
 import {QueryParams as AirtableSelectOptions} from './query_params';
+import _fetch from './fetch';
 
 type CustomHeaders = ObjectMap<string, string | number | boolean>;
 
@@ -24,6 +25,7 @@ class Airtable {
     readonly _endpointUrl: string;
     readonly _noRetryIfRateLimited: boolean;
     readonly _requestTimeout: number;
+    readonly _fetch: typeof _fetch;
 
     static Base = Base;
     static Record = AirtableRecord;
@@ -70,6 +72,9 @@ class Airtable {
                 value:
                     opts.requestTimeout || Airtable.requestTimeout || defaultConfig.requestTimeout,
             },
+            _fetch: {
+                value: opts.fetch || _fetch,
+            },
         });
 
         if (!this._apiKey && !this._getApiKey) {
@@ -78,7 +83,7 @@ class Airtable {
     }
 
     base(baseId: string): Airtable.Base {
-        return Base.createFunctor(this, baseId);
+        return Base.createFunctor(this, baseId, this._fetch);
     }
 
     static default_config(): Airtable.AirtableOptions {
@@ -124,6 +129,10 @@ namespace Airtable {
         endpointUrl?: string;
         noRetryIfRateLimited?: boolean;
         requestTimeout?: number;
+        /**
+         * Custom added for Datafetcher: Set the implementation of fetch to be used
+         */
+        fetch?: typeof _fetch;
     }
 
     export type GetApiKey = () => Promise<string>;
