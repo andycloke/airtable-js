@@ -103,6 +103,7 @@ var run_action_1 = __importDefault(require("./run_action"));
 var package_version_1 = __importDefault(require("./package_version"));
 var exponential_backoff_with_jitter_1 = __importDefault(require("./exponential_backoff_with_jitter"));
 var userAgent = "Airtable.js/" + package_version_1.default;
+var WEIRD_SERVER_ERRORS_TO_RETRY = ['SERVER_ERROR', 'SERVICE_UNAVAILABLE', 'UNEXPECTED_ERROR'];
 var Base = /** @class */ (function () {
     function Base(airtable, baseId, fetch) {
         if (fetch === void 0) { fetch = fetch_1.default; }
@@ -143,10 +144,7 @@ var Base = /** @class */ (function () {
                                 _this._fetch(url, requestOptions)
                                     .then(function (resp) {
                                     clearTimeout(timeout);
-                                    var statusErr = _this._checkStatusForError(resp.status);
-                                    var retryBasedOnStatusError = statusErr &&
-                                        ['SERVER_ERROR', 'SERVICE_UNAVAILABLE', 'UNEXPECTED_ERROR'].includes(statusErr.error);
-                                    if (retryBasedOnStatusError ||
+                                    if (_this._isWeirdServerError(resp.status) ||
                                         (resp.status === 429 && !_this._airtable._noRetryIfRateLimited)) {
                                         var numAttempts_1 = get_1.default(options, '_numAttempts', 0);
                                         var backoffDelayMs = exponential_backoff_with_jitter_1.default(numAttempts_1);
@@ -218,6 +216,10 @@ var Base = /** @class */ (function () {
                 }
             });
         });
+    };
+    Base.prototype._isWeirdServerError = function (statusCode) {
+        var statusErr = this._checkStatusForError(statusCode);
+        return statusErr && WEIRD_SERVER_ERRORS_TO_RETRY.includes(statusErr.error);
     };
     Base.prototype._checkStatusForError = function (statusCode, body) {
         var _a = (body !== null && body !== void 0 ? body : { error: {} }).error, error = _a === void 0 ? {} : _a;
@@ -898,7 +900,8 @@ function runAction(base, method, path, queryParams, bodyData, callback, numAttem
         fetch(url, options)
             .then(function (resp) {
             clearTimeout(timeout);
-            if (resp.status === 429 && !base._airtable._noRetryIfRateLimited) {
+            if (base._isWeirdServerError(resp.status) ||
+                (resp.status === 429 && !base._airtable._noRetryIfRateLimited)) {
                 var backoffDelayMs = exponential_backoff_with_jitter_1.default(numAttempts);
                 setTimeout(function () {
                     runAction(base, method, path, queryParams, bodyData, callback, numAttempts + 1, fetch);

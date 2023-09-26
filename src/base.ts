@@ -16,6 +16,8 @@ import {FieldSet} from './field_set';
 
 const userAgent = `Airtable.js/${packageVersion}`;
 
+const WEIRD_SERVER_ERRORS_TO_RETRY = ['SERVER_ERROR', 'SERVICE_UNAVAILABLE', 'UNEXPECTED_ERROR'];
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type BaseBody = any;
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -80,14 +82,8 @@ class Base {
             this._fetch(url, requestOptions)
                 .then((resp: Response) => {
                     clearTimeout(timeout);
-                    const statusErr = this._checkStatusForError(resp.status);
-                    const retryBasedOnStatusError =
-                        statusErr &&
-                        ['SERVER_ERROR', 'SERVICE_UNAVAILABLE', 'UNEXPECTED_ERROR'].includes(
-                            statusErr.error
-                        );
                     if (
-                        retryBasedOnStatusError ||
+                        this._isWeirdServerError(resp.status) ||
                         (resp.status === 429 && !this._airtable._noRetryIfRateLimited)
                     ) {
                         const numAttempts = get(options, '_numAttempts', 0);
@@ -155,6 +151,11 @@ class Base {
         }
 
         return result.toJSON();
+    }
+
+    _isWeirdServerError(statusCode: number): boolean {
+        const statusErr = this._checkStatusForError(statusCode);
+        return statusErr && WEIRD_SERVER_ERRORS_TO_RETRY.includes(statusErr.error);
     }
 
     _checkStatusForError(statusCode: number, body?: BaseBody): null | AirtableError {
