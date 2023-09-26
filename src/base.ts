@@ -80,7 +80,16 @@ class Base {
             this._fetch(url, requestOptions)
                 .then((resp: Response) => {
                     clearTimeout(timeout);
-                    if (resp.status === 429 && !this._airtable._noRetryIfRateLimited) {
+                    const statusErr = this._checkStatusForError(resp.status);
+                    const retryBasedOnStatusError =
+                        statusErr &&
+                        ['SERVER_ERROR', 'SERVICE_UNAVAILABLE', 'UNEXPECTED_ERROR'].includes(
+                            statusErr.error
+                        );
+                    if (
+                        retryBasedOnStatusError ||
+                        (resp.status === 429 && !this._airtable._noRetryIfRateLimited)
+                    ) {
                         const numAttempts = get(options, '_numAttempts', 0);
                         const backoffDelayMs = exponentialBackoffWithJitter(numAttempts);
                         setTimeout(() => {

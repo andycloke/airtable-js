@@ -143,7 +143,11 @@ var Base = /** @class */ (function () {
                                 _this._fetch(url, requestOptions)
                                     .then(function (resp) {
                                     clearTimeout(timeout);
-                                    if (resp.status === 429 && !_this._airtable._noRetryIfRateLimited) {
+                                    var statusErr = _this._checkStatusForError(resp.status);
+                                    var retryBasedOnStatusError = statusErr &&
+                                        ['SERVER_ERROR', 'SERVICE_UNAVAILABLE', 'UNEXPECTED_ERROR'].includes(statusErr.error);
+                                    if (retryBasedOnStatusError ||
+                                        (resp.status === 429 && !_this._airtable._noRetryIfRateLimited)) {
                                         var numAttempts_1 = get_1.default(options, '_numAttempts', 0);
                                         var backoffDelayMs = exponential_backoff_with_jitter_1.default(numAttempts_1);
                                         setTimeout(function () {
