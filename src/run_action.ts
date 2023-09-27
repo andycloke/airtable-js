@@ -74,7 +74,7 @@ function runAction(
                 .then(resp => {
                     clearTimeout(timeout);
                     if (
-                        base._isWeirdServerError(resp.status) ||
+                        base._retryWeirdServerError(resp.status, numAttempts) ||
                         (resp.status === 429 && !base._airtable._noRetryIfRateLimited)
                     ) {
                         const backoffDelayMs = exponentialBackoffWithJitter(numAttempts);

@@ -104,6 +104,7 @@ var package_version_1 = __importDefault(require("./package_version"));
 var exponential_backoff_with_jitter_1 = __importDefault(require("./exponential_backoff_with_jitter"));
 var userAgent = "Airtable.js/" + package_version_1.default;
 var WEIRD_SERVER_ERRORS_TO_RETRY = ['SERVER_ERROR', 'SERVICE_UNAVAILABLE', 'UNEXPECTED_ERROR'];
+var MAX_WEIRD_SERVER_ERROR_RETRIES = 6;
 var Base = /** @class */ (function () {
     function Base(airtable, baseId, fetch) {
         if (fetch === void 0) { fetch = fetch_1.default; }
@@ -144,12 +145,12 @@ var Base = /** @class */ (function () {
                                 _this._fetch(url, requestOptions)
                                     .then(function (resp) {
                                     clearTimeout(timeout);
-                                    if (_this._isWeirdServerError(resp.status) ||
+                                    var numAttempts = get_1.default(options, '_numAttempts', 0);
+                                    if (_this._retryWeirdServerError(resp.status, numAttempts) ||
                                         (resp.status === 429 && !_this._airtable._noRetryIfRateLimited)) {
-                                        var numAttempts_1 = get_1.default(options, '_numAttempts', 0);
-                                        var backoffDelayMs = exponential_backoff_with_jitter_1.default(numAttempts_1);
+                                        var backoffDelayMs = exponential_backoff_with_jitter_1.default(numAttempts);
                                         setTimeout(function () {
-                                            var newOptions = __assign(__assign({}, options), { _numAttempts: numAttempts_1 + 1 });
+                                            var newOptions = __assign(__assign({}, options), { _numAttempts: numAttempts + 1 });
                                             _this.makeRequest(newOptions)
                                                 .then(resolve)
                                                 .catch(reject);
@@ -217,7 +218,10 @@ var Base = /** @class */ (function () {
             });
         });
     };
-    Base.prototype._isWeirdServerError = function (statusCode) {
+    Base.prototype._retryWeirdServerError = function (statusCode, numAttempts) {
+        if (numAttempts > MAX_WEIRD_SERVER_ERROR_RETRIES) {
+            return false;
+        }
         var statusErr = this._checkStatusForError(statusCode);
         return statusErr && WEIRD_SERVER_ERRORS_TO_RETRY.includes(statusErr.error);
     };
@@ -900,7 +904,7 @@ function runAction(base, method, path, queryParams, bodyData, callback, numAttem
         fetch(url, options)
             .then(function (resp) {
             clearTimeout(timeout);
-            if (base._isWeirdServerError(resp.status) ||
+            if (base._retryWeirdServerError(resp.status, numAttempts) ||
                 (resp.status === 429 && !base._airtable._noRetryIfRateLimited)) {
                 var backoffDelayMs = exponential_backoff_with_jitter_1.default(numAttempts);
                 setTimeout(function () {
